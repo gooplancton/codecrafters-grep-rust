@@ -4,7 +4,7 @@ use crate::{
 };
 
 use super::{
-    alphanumeric::AlphanumericCharacterClass, alternation::Alternation, backref::Backref,
+    alphanumeric::AlphanumericCharacterClass, backref::Backref,
     char_group::CharGroupCharacterClass, digit::DigitCharacterClass,
     end_of_string::EndOfLineCharacterClass, literal::LiteralCharCharacterClass,
     one_or_more_quantifier::OneOrMoreQuantifer, start_of_string::StartOfLineCharacterClass,
@@ -35,7 +35,11 @@ impl<'regex> Pattern<'regex> {
 
 impl Matcher for Pattern<'_> {
     fn extend_from(&self, input_line: &str, mut previous_match: Match) -> MatchResult {
-        let adj_idx = self.group_idx.map(|_| 1).unwrap_or_default();
+        let adj_idx = self
+            .group_idx
+            .map(|group_idx| group_idx + 1)
+            .unwrap_or_default();
+
         let closed_captures: usize = previous_match
             .captures
             .iter()
@@ -63,7 +67,7 @@ impl Matcher for Pattern<'_> {
                 } else {
                     let rest_of_pattern = rest_of_pattern.unwrap();
 
-                    Alternation::new(rest_of_pattern, self.rest_of_outer_scope, self.group_idx)
+                    Pattern::new(rest_of_pattern, self.rest_of_outer_scope, self.group_idx)
                         .extend_from(input_line, first_match)?
                 }
             }
